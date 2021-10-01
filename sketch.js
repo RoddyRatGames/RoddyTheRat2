@@ -1,6 +1,6 @@
 function preload(){
   alphaRoddy=loadImage('alpharoddy.png')
-  alphaRat2=loadImage('alpharat2.png')
+  alphaDaisy=loadImage('alphadaisy.png')
   cheese=loadImage('cheese.png')
 }
 // global variables
@@ -123,13 +123,55 @@ let difficultySelect={
 // one player functions
 let oneplayer={
   roddy: new Roddy(),
-  rat2: new Rat2(),
+  daisy: new Daisy(),
   cheese: new OnePCheese(),
-  nextCheese: new OnePNextCheese()
+  nextCheese: new OnePNextCheese(),
+  back: function(){
+    setTimeout(function(){
+      screen=4
+      difficulty=0
+    },1)
+  }
 }
 // two player functions
 let twoplayer={
-  
+  player1: new Player1(),
+  player2: new Player2(),
+  p1cheese: new TwoPCheese(230,400),
+  p2cheese: new TwoPCheese(1010,400),
+  nextCheeseX: [],
+  nextCheeseY: [],
+  p1nextCheese: new TwoPNextCheese(),
+  p2nextCheese: new TwoPNextCheese(),
+  p1score:0,
+  p2score:0,
+  highest:0,
+  newHighest:false,
+  back: function(){
+    setTimeout(function(){
+      screen=4
+      difficulty=0
+    },1)
+  }
+}
+function reset(){
+  oneplayer.roddy.x=315
+  oneplayer.roddy.y=315
+  oneplayer.daisy.x=315
+  oneplayer.daisy.y=315
+  oneplayer.cheese.x=330
+  oneplayer.cheese.y=420
+  twoplayer.player1.x=220
+  twoplayer.player1.y=330
+  twoplayer.player2.x=1000
+  twoplayer.player2.y=330
+  twoplayer.p1cheese.x=230
+  twoplayer.p1cheese.y=400
+  twoplayer.p2cheese.x=1010
+  twoplayer.p2cheese.y=400
+  twoplayer.p1score=0
+  twoplayer.p2score=0
+  twoplayer.highest=0
 }
 // key pressed functions
 function keyReleased(){
@@ -169,6 +211,14 @@ function keyReleased(){
   }
   else if(screen==4&&keyCode==ESCAPE){
     difficultySelect.back()
+  }
+  if(screen==5&&keyCode==ESCAPE){
+    oneplayer.back()
+    reset()
+  }
+  if(screen==6&&keyCode==ESCAPE){
+    twoplayer.back()
+    reset()
   }
 }
 function setup() {
@@ -212,7 +262,7 @@ function draw() {
     textSize(400)
     text("1    2",200,500)
     textSize(120)
-    text("Roddy          Rat 2",160,600)
+    text("Roddy          Daisy",160,600)
   }
 // difficulty select visuals
   if(screen==4){
@@ -242,7 +292,7 @@ function draw() {
       oneplayer.cheese.y=oneplayer.nextCheese.y
       oneplayer.nextCheese.randomize(random(15,620),random(0,620))
     }
-    if(oneplayer.rat2.y+90>=oneplayer.cheese.y&&oneplayer.rat2.x<=oneplayer.cheese.x+60&&oneplayer.rat2.y<=oneplayer.cheese.y+60&&oneplayer.rat2.x+90>=oneplayer.cheese.x){
+    if(oneplayer.daisy.y+90>=oneplayer.cheese.y&&oneplayer.daisy.x<=oneplayer.cheese.x+60&&oneplayer.daisy.y<=oneplayer.cheese.y+60&&oneplayer.daisy.x+90>=oneplayer.cheese.x){
       oneplayer.cheese.x=oneplayer.nextCheese.x
       oneplayer.cheese.y=oneplayer.nextCheese.y
       oneplayer.nextCheese.randomize(random(15,620),random(0,620))
@@ -258,8 +308,8 @@ function draw() {
       bgcR=200
       bgcG=255
       bgcB=220
-      oneplayer.rat2.show()
-      oneplayer.rat2.move()
+      oneplayer.daisy.show()
+      oneplayer.daisy.move()
     }
     fill(0)
     rect(720,0,560,720)
@@ -269,37 +319,99 @@ function draw() {
     bgcR=0
     bgcG=0
     bgcB=0
+    if(startsNow==true){
+      twoplayer.nextCheeseX[0]=random(10,440)
+      twoplayer.nextCheeseY[0]=random(110,540)
+    }
+    if(startsNow==true){
+      startsNow=false
+    }
     fill(255,200,220)
     rect(0,110,500,500)
     fill(200,255,220)
     rect(780,110,500,500)
+    twoplayer.p1cheese.show()
+    twoplayer.p2cheese.show()
+    if(twoplayer.p1score>twoplayer.highest){
+      twoplayer.newHighest=true
+      twoplayer.highest=twoplayer.p1score
+    }
+    if(twoplayer.p2score>twoplayer.highest){
+      twoplayer.newHighest=true
+      twoplayer.highest=twoplayer.p2score
+    }
+    if(twoplayer.newHighest==true){
+      twoplayer.nextCheeseX[twoplayer.highest]=random(10,440)
+      twoplayer.nextCheeseY[twoplayer.highest]=random(110,540)
+      twoplayer.newHighest=false
+    }
+    twoplayer.p1nextCheese.show(twoplayer.nextCheeseX[twoplayer.p1score],twoplayer.nextCheeseY[twoplayer.p1score])
+    twoplayer.p2nextCheese.show(780+twoplayer.nextCheeseX[twoplayer.p2score],twoplayer.nextCheeseY[twoplayer.p2score])
+    if(twoplayer.player1.y+60>=twoplayer.p1cheese.y&&twoplayer.player1.x<=twoplayer.p1cheese.x+40&&twoplayer.player1.y<=twoplayer.p1cheese.y+40&&twoplayer.player1.x+60>=twoplayer.p1cheese.x){
+      twoplayer.p1score+=1
+      twoplayer.p1cheese.x=twoplayer.p1nextCheese.x
+      twoplayer.p1cheese.y=twoplayer.p1nextCheese.y
+    }
+    if(twoplayer.player2.y+60>=twoplayer.p2cheese.y&&twoplayer.player2.x<=twoplayer.p2cheese.x+40&&twoplayer.player2.y<=twoplayer.p2cheese.y+40&&twoplayer.player2.x+60>=twoplayer.p2cheese.x){
+      twoplayer.p2score+=1
+      twoplayer.p2cheese.x=twoplayer.p2nextCheese.x
+      twoplayer.p2cheese.y=twoplayer.p2nextCheese.y
+    }
+    twoplayer.player1.show()
+    twoplayer.player1.move()
+    twoplayer.player2.show()
+    twoplayer.player2.move()
   }
   textSize(50)
   fill(50,100,255)
-  text("alpha 1.1",1050,700)
+  text("alpha 1.2",1050,700)
   
   if (keyIsDown(87)){
       oneplayer.roddy.up()
-      oneplayer.rat2.up()
+      oneplayer.daisy.up()
+      twoplayer.player1.up()
     }
     else if(keyIsDown(83)){
       oneplayer.roddy.down()
-      oneplayer.rat2.down()
+      oneplayer.daisy.down()
+      twoplayer.player1.down()
     }
     else{
       oneplayer.roddy.ySpeed=0
-      oneplayer.rat2.ySpeed=0
+      oneplayer.daisy.ySpeed=0
+      twoplayer.player1.ySpeed=0
   }
   if(keyIsDown(65)){
       oneplayer.roddy.left()
-      oneplayer.rat2.left()
+      oneplayer.daisy.left()
+      twoplayer.player1.left()
     }
     else if(keyIsDown(68)){
       oneplayer.roddy.right()
-      oneplayer.rat2.right()
+      oneplayer.daisy.right()
+      twoplayer.player1.right()
     }
     else{
       oneplayer.roddy.xSpeed=0
-      oneplayer.rat2.xSpeed=0
+      oneplayer.daisy.xSpeed=0
+      twoplayer.player1.xSpeed=0
+  }
+  if(keyIsDown(73)){
+      twoplayer.player2.up()
     }
+    else if(keyIsDown(75)){
+      twoplayer.player2.down()
+    }
+    else{
+      twoplayer.player2.ySpeed=0
+  }
+  if(keyIsDown(74)){
+      twoplayer.player2.left()
+    }
+    else if(keyIsDown(76)){
+      twoplayer.player2.right()
+    }
+    else{
+      twoplayer.player2.xSpeed=0
+  }
 }
