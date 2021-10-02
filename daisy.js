@@ -14,7 +14,18 @@ class Daisy{
     this.y=constrain(this.y,0,615)
   }
   show(){
-    image(alphaDaisy,this.x,this.y,this.size,this.size)
+    if(this.direction==1){
+      image(DaisyUp,this.x,this.y,this.size,this.size)
+    }
+    if(this.direction==2){
+      image(DaisyRight,this.x,this.y,this.size,this.size)
+    }
+    if(this.direction==3){
+      image(DaisyDown,this.x,this.y,this.size,this.size)
+    }
+    if(this.direction==4){
+      image(DaisyLeft,this.x,this.y,this.size,this.size)
+    }
   }
   up(){
     this.direction=1

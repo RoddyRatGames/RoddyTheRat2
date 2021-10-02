@@ -5,7 +5,7 @@ class OnePNextCheese{
     this.size=60
   }
   show(){
-    tint(255,128)
+    tint(255,96)
     image(cheese,this.x,this.y,this.size,this.size)
     noTint()
   }

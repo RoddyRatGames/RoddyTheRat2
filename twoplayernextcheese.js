@@ -7,7 +7,7 @@ class TwoPNextCheese{
   show(x,y){
     this.x=x
     this.y=y
-    tint(255,128)
+    tint(255,96)
     image(cheese,this.x,this.y,this.size,this.size)
     noTint()
   }
