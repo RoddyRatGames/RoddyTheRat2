@@ -4,13 +4,11 @@ class OnePNextCheese{
     this.y=0
     this.size=60
   }
-  show(){
-    tint(255,96)
-    image(cheese,this.x,this.y,this.size,this.size)
-    noTint()
-  }
-  randomize(x,y){
+  show(x,y,t){
     this.x=x
     this.y=y
+    tint(255,t)
+    image(cheese,this.x,this.y,this.size,this.size)
+    noTint()
   }
 }

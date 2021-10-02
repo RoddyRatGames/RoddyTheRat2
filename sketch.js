@@ -28,8 +28,10 @@ let timer=30
 let retry=function(){
   gameover=false
   oneplayer.score=0
+  oneplayer.pennyScore=0
   twoplayer.p1score=0
   twoplayer.p2score=0
+  twoplayer.pennyScore=0
   startsNow=true
 }
 // main menu functions
@@ -144,8 +146,16 @@ let difficultySelect={
 let oneplayer={
   roddy: new Roddy(),
   daisy: new Daisy(),
+  penny: new PennyOne(),
+  pennyScore: 0,
+  newHighest: false,
+  highest: 0,
   cheese: new OnePCheese(),
+  pennyCheese: new OnePCheese(),
   nextCheese: new OnePNextCheese(),
+  pennyNextCheese: new OnePNextCheese(),
+  nextCheeseX: [],
+  nextCheeseY: [],
   score: 0,
   back: function(){
     setTimeout(function(){
@@ -158,14 +168,18 @@ let oneplayer={
 let twoplayer={
   player1: new Player1(),
   player2: new Player2(),
+  penny: new PennyTwo(),
   p1cheese: new TwoPCheese(230,400),
   p2cheese: new TwoPCheese(1010,400),
+  pennyCheese: new TwoPCheese(230,400),
   nextCheeseX: [],
   nextCheeseY: [],
   p1nextCheese: new TwoPNextCheese(),
   p2nextCheese: new TwoPNextCheese(),
+  pennyNextCheese: new TwoPNextCheese(),
   p1score:0,
   p2score:0,
+  pennyScore:0,
   highest:0,
   newHighest:false,
   back: function(){
@@ -183,20 +197,31 @@ function reset(){
   oneplayer.daisy.x=315
   oneplayer.daisy.y=315
   oneplayer.daisy.direction=3
+  oneplayer.penny.x=315
+  oneplayer.penny.y=315
   oneplayer.cheese.x=330
   oneplayer.cheese.y=420
+  oneplayer.pennyCheese.x=330
+  oneplayer.pennyCheese.y=420
+  oneplayer.score=0
+  oneplayer.pennyScore=0
   twoplayer.player1.x=220
   twoplayer.player1.y=330
   twoplayer.player1.direction=3
   twoplayer.player2.x=1000
   twoplayer.player2.y=330
   twoplayer.player2.direction=3
+  twoplayer.penny.x=220
+  twoplayer.penny.y=330
   twoplayer.p1cheese.x=230
   twoplayer.p1cheese.y=400
   twoplayer.p2cheese.x=1010
   twoplayer.p2cheese.y=400
+  twoplayer.pennyCheese.x=230
+  twoplayer.pennyCheese.y=400
   twoplayer.p1score=0
   twoplayer.p2score=0
+  twoplayer.pennyScore=0
   twoplayer.highest=0
   started=false
   go=false
@@ -233,12 +258,15 @@ function keyReleased(){
 // difficulty select keys
   if(screen==4&&keyCode==49){
     difficultySelect.one()
+    reset()
   }
   else if(screen==4&&keyCode==50){
     difficultySelect.two()
+    reset()
   }
   else if(screen==4&&keyCode==51){
     difficultySelect.three()
+    reset()
   }
   else if(screen==4&&keyCode==ESCAPE){
     difficultySelect.back()
@@ -247,10 +275,12 @@ function keyReleased(){
   if(screen==5&&keyCode==ESCAPE){
     oneplayer.back()
     reset()
+    retry()
   }
   if(screen==6&&keyCode==ESCAPE){
     twoplayer.back()
     reset()
+    retry()
   }
   if(gameover==true&&keyCode==32){
     reset()
@@ -314,7 +344,7 @@ function draw() {
     textSize(60)
     text("SLOW  MEDIUM  FAST",100,600)
   }
-// one player--cheese
+// one player--start
   if(started==false){
       frameCount=0
     }
@@ -322,12 +352,15 @@ function draw() {
       started=true
     }
   if(screen==5){
+// cheese
     oneplayer.cheese.show()
-    oneplayer.nextCheese.show()
 // random starting position
     
     if(startsNow==true){
-      oneplayer.nextCheese.randomize(random(15,620),random(0,620))
+      oneplayer.nextCheeseX[0]=(random(15,620))
+      oneplayer.nextCheeseY[0]=(random(0,620))
+      oneplayer.nextCheeseX[1]=(random(15,620))
+      oneplayer.nextCheeseY[1]=(random(0,620))
       started=true
     }
     if(startsNow==true){
@@ -357,17 +390,58 @@ function draw() {
     if(gameover==true){
       
     }
+// penny
+    if(oneplayer.penny.y+90>=oneplayer.pennyCheese.y&&oneplayer.penny.x<=oneplayer.pennyCheese.x+60&&oneplayer.penny.y<=oneplayer.pennyCheese.y+60&&oneplayer.penny.x+90>=oneplayer.pennyCheese.x){
+      oneplayer.pennyScore++
+      oneplayer.pennyCheese.x=oneplayer.pennyNextCheese.x
+      oneplayer.pennyCheese.y=oneplayer.pennyNextCheese.y
+    }
+    if(oneplayer.score>oneplayer.highest){
+      oneplayer.newHighest=true
+      oneplayer.highest=oneplayer.score
+    }
+    if(oneplayer.pennyScore>oneplayer.highest){
+      oneplayer.newHighest=true
+      oneplayer.highest=oneplayer.pennyScore
+    }
+    if(oneplayer.newHighest==true){
+      
+      newHighest=false
+      oneplayer.nextCheeseX[oneplayer.highest+1]=(random(15,620))
+      oneplayer.nextCheeseY[oneplayer.highest+1]=(random(0,620))
+    }
+    if(oneplayer.penny.y+90<oneplayer.pennyCheese.y&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.down()
+    },150/difficulty)
+    }
+    if(oneplayer.penny.x>oneplayer.pennyCheese.x+60&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.left()
+      },150/difficulty)
+    }
+    if(oneplayer.penny.y>oneplayer.pennyCheese.y+60&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.up()
+      },150/difficulty)
+    }
+    if(oneplayer.penny.x+90<oneplayer.pennyCheese.x&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.right()
+      },150/difficulty)
+    }
+// next cheese
+    oneplayer.nextCheese.show(oneplayer.nextCheeseX[oneplayer.score],oneplayer.nextCheeseY[oneplayer.score],64)
+    oneplayer.pennyNextCheese.show(oneplayer.nextCheeseX[oneplayer.pennyScore],oneplayer.nextCheeseY[oneplayer.pennyScore],0)
 // collision
     if(oneplayer.roddy.y+90>=oneplayer.cheese.y&&oneplayer.roddy.x<=oneplayer.cheese.x+60&&oneplayer.roddy.y<=oneplayer.cheese.y+60&&oneplayer.roddy.x+90>=oneplayer.cheese.x){
       oneplayer.cheese.x=oneplayer.nextCheese.x
       oneplayer.cheese.y=oneplayer.nextCheese.y
-      oneplayer.nextCheese.randomize(random(15,620),random(0,620))
       oneplayer.score++
     }
     if(oneplayer.daisy.y+90>=oneplayer.cheese.y&&oneplayer.daisy.x<=oneplayer.cheese.x+60&&oneplayer.daisy.y<=oneplayer.cheese.y+60&&oneplayer.daisy.x+90>=oneplayer.cheese.x){
       oneplayer.cheese.x=oneplayer.nextCheese.x
       oneplayer.cheese.y=oneplayer.nextCheese.y
-      oneplayer.nextCheese.randomize(random(15,620),random(0,620))
       oneplayer.score++
     }
 // characters
@@ -385,6 +459,7 @@ function draw() {
       oneplayer.daisy.show()
       oneplayer.daisy.move()
     }
+    oneplayer.penny.move()
 // ui
     fill(0)
     rect(720,0,560,720)
@@ -400,7 +475,28 @@ function draw() {
         text("0:00",750,120)
       }
     textSize(60)
+    fill(bgcR,bgcG,bgcB)
     text("SCORE:"+oneplayer.score,750,220)
+    fill(175,125,75)
+    text("PENNY:"+oneplayer.pennyScore,750,300)
+    let onePCPS=0
+    if(30-timer>0&&timer>-1){
+        onePCPS=oneplayer.score/(30-timer)
+      }
+      else{
+        onePCPS=oneplayer.score/30
+    }
+      fill(255,200,0)
+      text("C/S:"+onePCPS.toFixed(2),750,380)
+    let 
+  onePEfficiency=oneplayer.score/oneplayer.pennyScore*100
+    fill(0,255,0)
+    if(difficulty==3&&oneplayer.pennyScore>0){
+        text("EFF:"+Math.round(onePEfficiency)+"%",750,460)
+      }
+      else if(difficulty==3){
+        text("EFF:100%",750,460)
+    }
     fill(0)
     if(countdown>=1){
         text(countdown,325,300)
@@ -469,6 +565,11 @@ function draw() {
     twoplayer.p2cheese.show()
 // highest score continues the list of random spawns for the cheese. both sides cheese spawn in the same list of random positions.
 // the idea of new highest will be replaced by the antagonist we have yet to name or add. they will play the route perfectly which will obviously continue the route.
+    if(twoplayer.penny.y+60>=twoplayer.pennyCheese.y&&twoplayer.penny.x<=twoplayer.pennyCheese.x+40&&twoplayer.penny.y<=twoplayer.pennyCheese.y+40&&twoplayer.penny.x+60>=twoplayer.pennyCheese.x){
+      twoplayer.pennyScore+=1
+      twoplayer.pennyCheese.x=twoplayer.pennyNextCheese.x
+      twoplayer.pennyCheese.y=twoplayer.pennyNextCheese.y
+    }
     if(twoplayer.p1score>twoplayer.highest){
       twoplayer.newHighest=true
       twoplayer.highest=twoplayer.p1score
@@ -477,14 +578,39 @@ function draw() {
       twoplayer.newHighest=true
       twoplayer.highest=twoplayer.p2score
     }
+    if(twoplayer.pennyScore>twoplayer.highest){
+      twoplayer.newHighest=true
+      twoplayer.highest=twoplayer.pennyScore
+    }
     if(twoplayer.newHighest==true){
       twoplayer.nextCheeseX[twoplayer.highest]=random(10,440)
       twoplayer.nextCheeseY[twoplayer.highest]=random(110,540)
       twoplayer.newHighest=false
     }
+    if(twoplayer.penny.y+60<twoplayer.pennyCheese.y&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      twoplayer.penny.down()
+    },150/difficulty)
+    }
+    if(twoplayer.penny.x>twoplayer.pennyCheese.x+40&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      twoplayer.penny.left()
+      },150/difficulty)
+    }
+    if(twoplayer.penny.y>twoplayer.pennyCheese.y+40&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      twoplayer.penny.up()
+      },150/difficulty)
+    }
+    if(twoplayer.penny.x+60<twoplayer.pennyCheese.x&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      twoplayer.penny.right()
+      },150/difficulty)
+    }
 // as the highest possible score continues the array of random numbers, the players personal score corresponds to the index of their next cheese location
-    twoplayer.p1nextCheese.show(twoplayer.nextCheeseX[twoplayer.p1score],twoplayer.nextCheeseY[twoplayer.p1score])
-    twoplayer.p2nextCheese.show(780+twoplayer.nextCheeseX[twoplayer.p2score],twoplayer.nextCheeseY[twoplayer.p2score])
+    twoplayer.p1nextCheese.show(twoplayer.nextCheeseX[twoplayer.p1score],twoplayer.nextCheeseY[twoplayer.p1score],64)
+    twoplayer.p2nextCheese.show(780+twoplayer.nextCheeseX[twoplayer.p2score],twoplayer.nextCheeseY[twoplayer.p2score],64)
+    twoplayer.pennyNextCheese.show(twoplayer.nextCheeseX[twoplayer.pennyScore],twoplayer.nextCheeseY[twoplayer.pennyScore],0)
 // collision
     if(twoplayer.player1.y+60>=twoplayer.p1cheese.y&&twoplayer.player1.x<=twoplayer.p1cheese.x+40&&twoplayer.player1.y<=twoplayer.p1cheese.y+40&&twoplayer.player1.x+60>=twoplayer.p1cheese.x){
       twoplayer.p1score+=1
@@ -501,6 +627,7 @@ function draw() {
     twoplayer.player1.move()
     twoplayer.player2.show()
     twoplayer.player2.move()
+    twoplayer.penny.move()
 // ui
     fill(255)
     textSize(65)
@@ -513,13 +640,53 @@ function draw() {
       else{
         text("0:00",515,200)
       }
+    let POneCPS=0
+    let PTwoCPS=0
+    let POneEfficiency=twoplayer.p1score/twoplayer.pennyScore*100
+    let PTwoEfficiency=twoplayer.p2score/twoplayer.pennyScore*100
+    if(30-timer>0&&timer>-1){
+        POneCPS=twoplayer.p1score/(30-timer)
+        PTwoCPS=twoplayer.p2score/(30-timer)
+      }
+      else{
+        POneCPS=twoplayer.p1score/30
+        PTwoCPS=twoplayer.p2score/30
+    }
     textSize(30)
-    text("SCORE",565,275)
+    if(twoplayer.p1score>twoplayer.p2score){
+        fill(255,200,220)
+      }
+      else if(twoplayer.p2score>twoplayer.p1score){
+        fill(200,2550,220)
+      }
+      else{
+        fill(255)
+      }
+    text("SCORE",565,255)
+    fill(175,125,75)
+    text("PENNY",565,370)
+    fill(255,200,0)
+    text("C/S",600,470)
+    textSize(28)
+    fill(0,255,0)
+    text("EFFICIENCY",500,560)
     textSize(50)
     textAlign(CENTER)
-    text(twoplayer.p1score+"-"+twoplayer.p2score,640,335)
+    fill(255)
+    text(twoplayer.p1score+"-"+twoplayer.p2score,640,305)
+    text(twoplayer.pennyScore,640,420)
+    textSize(30)
+    text(POneCPS.toFixed(2)+"-"+PTwoCPS.toFixed(1),640,500)
+    if(difficulty==3&&twoplayer.pennyScore>0){
+        text(Math.round(POneEfficiency)+"%-"+Math.round(PTwoEfficiency)+"%",640,590)
+      }
+      else if(difficulty==3){
+        text("100%-100%",640,590)
+    }
     textAlign(LEFT,BOTTOM)
+    
     fill(0)
+    textSize(50)
     if(countdown>=1){
         text(countdown,225,300)
         text(countdown,1005,300)
@@ -549,64 +716,82 @@ function draw() {
   textFont(comicSans)
   textSize(50)
   fill(50,100,255)
-  text("alpha 1.3",1050,700)
+  text("alpha 1.4",1050,700)
 // inputs
-  if (keyIsDown(87)&&frameCount>180){
-      oneplayer.roddy.up()
-      oneplayer.daisy.up()
-      twoplayer.player1.up()
+  if(frameCount>180){
+    if (keyIsDown(87)&&frameCount>180){
+        twoplayer.player1.up()
+      }
+      else if(keyIsDown(83)&&frameCount>180){
+        twoplayer.player1.down()
+      }
+      else{
+        twoplayer.player1.ySpeed=0
     }
-    else if(keyIsDown(83)&&frameCount>180){
-      oneplayer.roddy.down()
-      oneplayer.daisy.down()
-      twoplayer.player1.down()
+    if(keyIsDown(65)&&frameCount>180){
+        twoplayer.player1.left()
+      }
+      else if(keyIsDown(68)&&frameCount>180){
+        twoplayer.player1.right()
+      }
+      else{
+        twoplayer.player1.xSpeed=0
+      }
+    if(keyIsDown(73)&&frameCount>180){
+        twoplayer.player2.up()
+      }
+      else if(keyIsDown(75)&&frameCount>180){
+        twoplayer.player2.down()
+      }
+      else{
+        twoplayer.player2.ySpeed=0
     }
-    else{
-      oneplayer.roddy.ySpeed=0
-      oneplayer.daisy.ySpeed=0
-      twoplayer.player1.ySpeed=0
-  }
-  if(keyIsDown(65)&&frameCount>180){
-      oneplayer.roddy.left()
-      oneplayer.daisy.left()
-      twoplayer.player1.left()
+    if(keyIsDown(74)&&frameCount>180){
+        twoplayer.player2.left()
+      }
+      else if(keyIsDown(76)&&frameCount>180){
+        twoplayer.player2.right()
+      }
+        else{
+          twoplayer.player2.xSpeed=0
+      }
+      if(keyIsDown(87)||keyIsDown(73)){
+        oneplayer.roddy.up()
+        oneplayer.daisy.up()
+       }
+       else if(keyIsDown(83)||keyIsDown(75)){
+        oneplayer.roddy.down()
+        oneplayer.daisy.down()
+       }
+       else{
+        oneplayer.roddy.ySpeed=0
+        oneplayer.daisy.ySpeed=0
     }
-    else if(keyIsDown(68)&&frameCount>180){
-      oneplayer.roddy.right()
-      oneplayer.daisy.right()
-      twoplayer.player1.right()
+    if(keyIsDown(65)||keyIsDown(74)){
+        oneplayer.roddy.left()
+        oneplayer.daisy.left()
+      }
+      else if(keyIsDown(68)||keyIsDown(76)){
+        oneplayer.roddy.right()
+        oneplayer.daisy.right()
+      }
+      else{
+        oneplayer.roddy.xSpeed=0
+        oneplayer.daisy.xSpeed=0
     }
-    else{
-      oneplayer.roddy.xSpeed=0
-      oneplayer.daisy.xSpeed=0
-      twoplayer.player1.xSpeed=0
-  }
-  if(keyIsDown(73)&&frameCount>180){
-      twoplayer.player2.up()
-    }
-    else if(keyIsDown(75)&&frameCount>180){
-      twoplayer.player2.down()
-    }
-    else{
-      twoplayer.player2.ySpeed=0
-  }
-  if(keyIsDown(74)&&frameCount>180){
-      twoplayer.player2.left()
-    }
-    else if(keyIsDown(76)&&frameCount>180){
-      twoplayer.player2.right()
-    }
-    else{
-      twoplayer.player2.xSpeed=0
   }
   if(gameover==true){
     oneplayer.roddy.xSpeed=0
     oneplayer.roddy.ySpeed=0
     oneplayer.daisy.xSpeed=0
     oneplayer.daisy.ySpeed=0
+    oneplayer.penny.xSpeed=0
+    oneplayer.penny.ySpeed=0
     twoplayer.player1.xSpeed=0
     twoplayer.player1.ySpeed=0
     twoplayer.player2.xSpeed=0
     twoplayer.player2.ySpeed=0
+    twoplayer.penny.xSpeed=0
+    twoplayer.penny.ySpeed=0
   }
 }
