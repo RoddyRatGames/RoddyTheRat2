@@ -76,6 +76,13 @@ let charSelect={
       screen=4
     },1)
   },
+  p:function(){
+    setTimeout(function(){
+      character=1
+      mode=3
+      screen=4
+    },1)
+},
   back:function(){
     setTimeout(function(){
       screen=2
@@ -98,6 +105,11 @@ let difficultySelect={
         screen=6
       },1)
     }
+    else if(mode==3){
+      setTimeout(function(){
+        screen=7
+      },1)
+    }
   },
   two:function(){
     difficulty=2
@@ -112,6 +124,11 @@ let difficultySelect={
         screen=6
       },1)
     }
+    else if(mode==3){
+      setTimeout(function(){
+        screen=7
+      },1)
+    }
   },
   three:function(){
     difficulty=3
@@ -124,6 +141,11 @@ let difficultySelect={
     else if(mode==2){
       setTimeout(function(){
         screen=6
+      },1)
+    }
+    else if(mode==3){
+      setTimeout(function(){
+        screen=7
       },1)
     }
   },
@@ -167,6 +189,8 @@ let oneplayer={
 // two player functions
 let twoplayer={
   player1: new Player1(),
+  p1name: "",
+  p2name: "",
   player2: new Player2(),
   penny: new PennyTwo(),
   p1cheese: new TwoPCheese(230,400),
@@ -205,6 +229,7 @@ function reset(){
   oneplayer.pennyCheese.y=420
   oneplayer.score=0
   oneplayer.pennyScore=0
+  oneplayer.highest=0
   twoplayer.player1.x=220
   twoplayer.player1.y=330
   twoplayer.player1.direction=3
@@ -251,6 +276,10 @@ function keyReleased(){
   }
   else if(screen==3&&keyCode==50){
     charSelect.two()
+  }
+  
+  else if(screen==3&&keyCode==80){
+    charSelect.p()
   }
   else if(screen==3&&keyCode==ESCAPE){
     charSelect.back()
@@ -343,6 +372,9 @@ function draw() {
     text("1 2 3",150,500)
     textSize(60)
     text("SLOW  MEDIUM  FAST",100,600)
+    if(mode==2){
+      
+    }
   }
 // one player--start
   if(started==false){
@@ -413,22 +445,22 @@ function draw() {
     if(oneplayer.penny.y+90<oneplayer.pennyCheese.y&&frameCount>180&&gameover==false){
       setTimeout(function(){
       oneplayer.penny.down()
-    },150/difficulty)
+    },250/difficulty)
     }
     if(oneplayer.penny.x>oneplayer.pennyCheese.x+60&&frameCount>180&&gameover==false){
       setTimeout(function(){
       oneplayer.penny.left()
-      },150/difficulty)
+      },250/difficulty)
     }
     if(oneplayer.penny.y>oneplayer.pennyCheese.y+60&&frameCount>180&&gameover==false){
       setTimeout(function(){
       oneplayer.penny.up()
-      },150/difficulty)
+      },250/difficulty)
     }
     if(oneplayer.penny.x+90<oneplayer.pennyCheese.x&&frameCount>180&&gameover==false){
       setTimeout(function(){
       oneplayer.penny.right()
-      },150/difficulty)
+      },250/difficulty)
     }
 // next cheese
     oneplayer.nextCheese.show(oneplayer.nextCheeseX[oneplayer.score],oneplayer.nextCheeseY[oneplayer.score],64)
@@ -712,11 +744,14 @@ function draw() {
         }
   
     }
+  if(screen==7){
+    
+  }
 // version #
   textFont(comicSans)
   textSize(50)
   fill(50,100,255)
-  text("alpha 1.4",1050,700)
+  text("beta 1.0",1050,700)
 // inputs
   if(frameCount>180){
     if (keyIsDown(87)&&frameCount>180){
