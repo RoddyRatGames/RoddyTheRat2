@@ -213,6 +213,16 @@ let twoplayer={
     },1)
   }
 }
+let vspenny={
+  back: function(){
+    setTimeout(function(){
+      screen=2
+      mode=0
+      character=0
+      difficulty=0
+    },1)
+  }
+}
 // reset function
 function reset(){
   oneplayer.roddy.x=315
@@ -308,6 +318,11 @@ function keyReleased(){
   }
   if(screen==6&&keyCode==ESCAPE){
     twoplayer.back()
+    reset()
+    retry()
+  }
+  if(screen==7&&keyCode==ESCAPE){
+    vspenny.back()
     reset()
     retry()
   }
@@ -745,13 +760,20 @@ function draw() {
   
     }
   if(screen==7){
-    
+    textSize(92)
+    text("COMING SOON...",20,430)
   }
 // version #
   textFont(comicSans)
-  textSize(50)
   fill(50,100,255)
-  text("beta 1.0",1050,700)
+  if(screen==7){
+      textSize(130)
+      text("beta 1.0",350,600)
+    }
+    else{
+      textSize(55)
+      text("alpha 1.4.1",1000,700)
+  }
 // inputs
   if(frameCount>180){
     if (keyIsDown(87)&&frameCount>180){
