@@ -7,12 +7,25 @@ function preload(){
   DaisyRight=loadImage('a_daisyright.png')
   DaisyDown=loadImage('a_daisydown.png')
   DaisyLeft=loadImage('a_daisyleft.png')
+  ogRoddyUp=loadImage('ogroddyup.png')
+  ogRoddyRight=loadImage('ogroddyright.png')
+  ogRoddyDown=loadImage('ogroddydown.png')
+  ogRoddyLeft=loadImage('ogroddyleft.png')
+  cheeseIcon=loadImage('cheeseicon.png')
+  ogRoddyIcon=loadImage('ogroddyicon.png')
+  daisyIcon=loadImage('daisyicon.png')
+  roddyIcon=loadImage('roddyicon.png')
+  pennyIcon=loadImage('pennyicon.png')
   cheese=loadImage('cheese.png')
   pixelFont=loadFont('prstart.ttf')
+// https://www.1001fonts.com/magnolia-script-font.html
+  pFont=loadFont('yoster.ttf')
   comicSans=loadFont('COMIC.TTF')
+  titleIntro=loadSound('titlescreenintro.wav')
+  titleMusic=loadSound('titlescreensong.wav')
 }
 // global variables
-let screen=1
+let screen=0
 let bgcR=0
 let bgcG=0
 let bgcB=0
@@ -22,7 +35,7 @@ let character=0
 let startsNow=false
 let started=false
 let go=false
-let gameover=false
+let gameover=true
 let countdown=3
 let timer=30
 let retry=function(){
@@ -36,11 +49,27 @@ let retry=function(){
 }
 // main menu functions
 let mainMenu={
+  intro:true,
+  play:false,
   enter:function(){
     setTimeout(function(){
-      screen=2
+      screen=1.1
     },1)
   }
+}
+let tutorial={
+  toTutorial:function(){
+    screen=1.2
+  },
+  toCharSelect:function(){
+    screen=2
+  },
+  roddy:new Roddy(),
+  cheese:new OnePCheese(),
+  nextCheese: new OnePNextCheese(),
+  nextCheeseX:0,
+  nextCheeseY:0,
+  score:0
 }
 // mode select functions
 let modeSelect={
@@ -56,9 +85,16 @@ let modeSelect={
       screen=4
     },1)
   },
+  p:function(){
+    setTimeout(function(){
+      mode=3
+      screen=3
+    },1)
+},
   back:function(){
     setTimeout(function(){
       screen=1
+      tutorial.score=0
     },1)
   }
 }
@@ -76,13 +112,12 @@ let charSelect={
       screen=4
     },1)
   },
-  p:function(){
+  a:function(){
     setTimeout(function(){
-      character=1
-      mode=3
+      character=3
       screen=4
     },1)
-},
+  },
   back:function(){
     setTimeout(function(){
       screen=2
@@ -168,6 +203,7 @@ let difficultySelect={
 let oneplayer={
   roddy: new Roddy(),
   daisy: new Daisy(),
+  ogRoddy: new OGRoddy(),
   penny: new PennyOne(),
   pennyScore: 0,
   newHighest: false,
@@ -216,7 +252,7 @@ let twoplayer={
 let vspenny={
   back: function(){
     setTimeout(function(){
-      screen=2
+      screen=1
       mode=0
       character=0
       difficulty=0
@@ -227,12 +263,23 @@ let vspenny={
 function reset(){
   oneplayer.roddy.x=315
   oneplayer.roddy.y=315
+  oneplayer.roddy.xSpeed=0
+  oneplayer.roddy.ySpeed=0
   oneplayer.roddy.direction=3
   oneplayer.daisy.x=315
   oneplayer.daisy.y=315
+  oneplayer.daisy.xSpeed=0
+  oneplayer.daisy.ySpeed=0
   oneplayer.daisy.direction=3
+  oneplayer.ogRoddy.x=315
+  oneplayer.ogRoddy.y=315
+  oneplayer.ogRoddy.xSpeed=0
+  oneplayer.ogRoddy.ySpeed=0
+  oneplayer.ogRoddy.direction=3
   oneplayer.penny.x=315
   oneplayer.penny.y=315
+  oneplayer.penny.xSpeed=0
+  oneplayer.penny.tSpeed=0
   oneplayer.cheese.x=330
   oneplayer.cheese.y=420
   oneplayer.pennyCheese.x=330
@@ -242,12 +289,18 @@ function reset(){
   oneplayer.highest=0
   twoplayer.player1.x=220
   twoplayer.player1.y=330
+  twoplayer.player1.xSpeed=0
+  twoplayer.player1.ySpeed=0
   twoplayer.player1.direction=3
   twoplayer.player2.x=1000
   twoplayer.player2.y=330
+  twoplayer.player2.xSpeed=0
+  twoplayer.player2.ySpeed=0
   twoplayer.player2.direction=3
   twoplayer.penny.x=220
   twoplayer.penny.y=330
+  twoplayer.penny.xSpeed=0
+  twoplayer.penny.ySpeed=0
   twoplayer.p1cheese.x=230
   twoplayer.p1cheese.y=400
   twoplayer.p2cheese.x=1010
@@ -265,10 +318,27 @@ function reset(){
   timer=30
 }
 // key pressed functions
+function keyPressed(){
+  if(screen==0){
+    screen=1
+    frameCount=0
+  }
+  if(screen==1.2&&tutorial.score>=20&&keyCode==32){
+    screen=2
+    started=false
+  }
+}
 function keyReleased(){
 // main menu keys
   if(screen==1&&keyCode==RETURN){
     mainMenu.enter()
+  }
+// tutorial keys
+  if(screen==1.1&&keyCode==89){
+    tutorial.toTutorial()
+  }
+  if(screen==1.1&&keyCode==78){
+    tutorial.toCharSelect()
   }
 // mode select keys
   if(screen==2&&keyCode==49){
@@ -287,9 +357,11 @@ function keyReleased(){
   else if(screen==3&&keyCode==50){
     charSelect.two()
   }
-  
-  else if(screen==3&&keyCode==80){
-    charSelect.p()
+  else if(screen==3&&keyCode==65){
+    charSelect.a()
+  }
+  else if(screen==2&&keyCode==80){
+    modeSelect.p()
   }
   else if(screen==3&&keyCode==ESCAPE){
     charSelect.back()
@@ -339,28 +411,158 @@ function draw() {
   background(bgcR,bgcG,bgcB);
 // main menu visuals
   textFont(pixelFont)
+  if(screen==0){
+
+    bgcR=175
+    bgcG=175
+    bgcB=175
+    textSize(75)
+    fill(255)
+    stroke(0)
+    strokeWeight(20)
+    text("SPECIAL THANKS~",75,100)
+    strokeWeight(11)
+    textSize(30)
+    text("   To all the alpha testers that encourage me to make games,",100,175,1150)
+    text("   And Landon for imagining this awesome game.",100,275,1150)
+    text("   Many more updates to come!",100,380,1150)
+  text("     Thank you all,",100,525,1150)
+  text("              Matt",100,575,1150)
+  noStroke()
+  textSize(25)
+  
+  text("press any button to continue",275,675)
+  }
+      if((screen==0||screen==1)&&mainMenu.intro==true){
+      
+      mainMenu.intro=false
+      titleIntro.play()
+      titleIntro.setVolume(0.5)
+      setTimeout(function(){
+      mainMenu.play=true
+      },6000)
+    }
+    if((screen==0||screen==1)&&mainMenu.play==true){
+      titleMusic.play()
+      titleMusic.loop()
+      
+      titleMusic.setVolume(0.5)
+      mainMenu.play=false
+    }
+  if(screen>1){
+    titleIntro.stop()
+    titleMusic.stop()
+  }
   if(screen==1){
     bgcR=200
     bgcG=200
     bgcB=150
     fill(0)
-    textSize(58)
-    text("RODDY THE RAT 2",200,100)
+    rect(550,50,420,230)
+    fill(175)
+    textSize(105)
+    strokeWeight(54)
+    stroke(0)
+    text("RODDY",300,160)
+    textSize(75)
+    text("THE",325,250)
+    text("RAT",575,275)
+    fill(100,200,150)
+    textSize(150)
+    strokeWeight(40)
+    text("2",835,152)
+    textFont(pFont)
+    textSize(225)
+    fill(200,100,150)
+    text("p",945,200)
+    image(ogRoddyIcon,800,145,120,120)
+    image(cheeseIcon,885,175,80,80)
+    image(daisyIcon,575,275,250,250)
+    image(roddyIcon,400,300,200,200)
+    image(pennyIcon,785,300,200,200)
+    textFont(pixelFont)
+    fill(0)
     textSize(30)
-    text("PRESS ENTER TO START",400,500)
+    noStroke()
+    text("PRESS ENTER TO START",350,650)
   }
-// mode select visuals
+// tutorial?
+  if(screen==1.1){
+    mainMenu.play=true
+    bgcR=255
+    bgcG=200
+    bgcB=220
+    stroke(0)
+    strokeWeight(20)
+    textSize(60)
+    fill(150)
+    textAlign(CENTER)
+    text("Do You Want To Play The Tutorial?",50,200,1180)
+    textSize(150)
+    strokeWeight(50)
+    text("Y   N",640,600)
+    textAlign(LEFT,BOTTOM)
+    tutorial.nextCheeseX=random(15,620)
+    tutorial.nextCheeseY=random(0,615)
+  }
+// tutorial
+  if (screen==1.2){
+    started=true
+    frameCount=181
+    fill(0)
+    rect(720,0,560,720)
+    
+        if(tutorial.roddy.y+90>=tutorial.cheese.y&&tutorial.roddy.x<=tutorial.cheese.x+60&&tutorial.roddy.y<=tutorial.cheese.y+60&&tutorial.roddy.x+90>=tutorial.cheese.x){
+      tutorial.cheese.x=tutorial.nextCheese.x
+      tutorial.cheese.y=tutorial.nextCheese.y
+          tutorial.nextCheeseX=random(15,620)
+          tutorial.nextCheeseY=random(0,615)
+      tutorial.score++
+    }
+    tutorial.cheese.show()
+    tutorial.nextCheese.show(tutorial.nextCheeseX,tutorial.nextCheeseY,96)
+    tutorial.roddy.show()
+    tutorial.roddy.move()
+    
+  
+    fill(255)
+    textSize(45)
+    
+    textFont(pFont)
+    text("   Pick up the cheese as fast as you can!",750,50,500)
+    text("   A shadow will show you where the next cheese will apear.",750,250,500)
+    
+      textAlign(CENTER)
+    if(tutorial.score<20){
+      fill(255,200,0)
+      let cheeseLeft=20-tutorial.score
+      text("Collect "+cheeseLeft+" cheese to move on.",750,500,500)
+    }
+    else{
+      fill(0,200,100)
+      text("Press space bar to continue.",750,500,500)
+    }
+    
+      textAlign(LEFT,BOTTOM)
+    textSize(60)
+    fill(255)
+  text("SCORE:"+tutorial.score,750,700)
+  }
+  // mode select visuals
   if(screen==2){
     bgcR=0
     bgcG=0
     bgcB=0
     fill(255)
     textSize(50)
-    text("MODE SELECT",350,80)
+    text("CHOOSE MODE",350,80)
+    image(roddyIcon,100,75,300,300)
+    image(daisyIcon,500,75,300,300)
+    image(pennyIcon,900,75,300,300)
     textSize(200)
-    text("1  2",225,500)
-    textSize(60)
-    text("PLAYER   PLAYERS",160,600)
+    text("1 2 P",150,625)
+    textSize(40)
+    text("PLAYER   PLAYERS  VS PENNY",150,675)
   }
 // character select visuals
   if(screen==3){
@@ -369,11 +571,13 @@ function draw() {
     bgcB=0
     fill(255)
     textSize(50)
-    text("CHARACTER SELECT",250,80)
+    text("CHOOSE YOUR CHARACTER",125,80)
+    image(roddyIcon,150,75,300,300)
+    image(daisyIcon,800,75,300,300)
     textSize(200)
-    text("1  2",225,500)
+    text("1  2",225,625)
     textSize(60)
-    text("RODDY     DAISY",160,600)
+    text("RODDY     DAISY",160,675)
   }
 // difficulty select visuals
   if(screen==4){
@@ -382,11 +586,11 @@ function draw() {
     bgcB=0
     fill(255)
     textSize(50)
-    text("DIFFICULTY SELECT",225,80)
+    text("SET DIFFICULTY",325,80)
     textSize(200)
-    text("1 2 3",150,500)
+    text("1 2 3",150,625)
     textSize(60)
-    text("SLOW  MEDIUM  FAST",100,600)
+    text("SLOW  MEDIUM  FAST",100,675)
     if(mode==2){
       
     }
@@ -443,7 +647,45 @@ function draw() {
       oneplayer.pennyCheese.x=oneplayer.pennyNextCheese.x
       oneplayer.pennyCheese.y=oneplayer.pennyNextCheese.y
     }
-    if(oneplayer.score>oneplayer.highest){
+    
+    if(oneplayer.penny.y+90<oneplayer.pennyCheese.y&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.down()
+    },180/difficulty)
+    }
+    if(oneplayer.penny.x>oneplayer.pennyCheese.x+60&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.left()
+      },180/difficulty)
+    }
+    if(oneplayer.penny.y>oneplayer.pennyCheese.y+60&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.up()
+      },180/difficulty)
+    }
+    if(oneplayer.penny.x+90<oneplayer.pennyCheese.x&&frameCount>180&&gameover==false){
+      setTimeout(function(){
+      oneplayer.penny.right()
+      },180/difficulty)
+    }
+
+// collision
+    if(oneplayer.roddy.y+90>=oneplayer.cheese.y&&oneplayer.roddy.x<=oneplayer.cheese.x+60&&oneplayer.roddy.y<=oneplayer.cheese.y+60&&oneplayer.roddy.x+90>=oneplayer.cheese.x){
+      oneplayer.cheese.x=oneplayer.nextCheese.x
+      oneplayer.cheese.y=oneplayer.nextCheese.y
+      oneplayer.score++
+    }
+    if(oneplayer.daisy.y+90>=oneplayer.cheese.y&&oneplayer.daisy.x<=oneplayer.cheese.x+60&&oneplayer.daisy.y<=oneplayer.cheese.y+60&&oneplayer.daisy.x+90>=oneplayer.cheese.x){
+      oneplayer.cheese.x=oneplayer.nextCheese.x
+      oneplayer.cheese.y=oneplayer.nextCheese.y
+      oneplayer.score++
+    }
+    if(oneplayer.ogRoddy.y+90>=oneplayer.cheese.y&&oneplayer.ogRoddy.x<=oneplayer.cheese.x+60&&oneplayer.ogRoddy.y<=oneplayer.cheese.y+60&&oneplayer.ogRoddy.x+90>=oneplayer.cheese.x){
+      oneplayer.cheese.x=oneplayer.nextCheese.x
+      oneplayer.cheese.y=oneplayer.nextCheese.y
+      oneplayer.score++
+    }
+      if(oneplayer.score>oneplayer.highest){
       oneplayer.newHighest=true
       oneplayer.highest=oneplayer.score
     }
@@ -457,40 +699,9 @@ function draw() {
       oneplayer.nextCheeseX[oneplayer.highest+1]=(random(15,620))
       oneplayer.nextCheeseY[oneplayer.highest+1]=(random(0,620))
     }
-    if(oneplayer.penny.y+90<oneplayer.pennyCheese.y&&frameCount>180&&gameover==false){
-      setTimeout(function(){
-      oneplayer.penny.down()
-    },250/difficulty)
-    }
-    if(oneplayer.penny.x>oneplayer.pennyCheese.x+60&&frameCount>180&&gameover==false){
-      setTimeout(function(){
-      oneplayer.penny.left()
-      },250/difficulty)
-    }
-    if(oneplayer.penny.y>oneplayer.pennyCheese.y+60&&frameCount>180&&gameover==false){
-      setTimeout(function(){
-      oneplayer.penny.up()
-      },250/difficulty)
-    }
-    if(oneplayer.penny.x+90<oneplayer.pennyCheese.x&&frameCount>180&&gameover==false){
-      setTimeout(function(){
-      oneplayer.penny.right()
-      },250/difficulty)
-    }
-// next cheese
-    oneplayer.nextCheese.show(oneplayer.nextCheeseX[oneplayer.score],oneplayer.nextCheeseY[oneplayer.score],64)
+    // next cheese
+    oneplayer.nextCheese.show(oneplayer.nextCheeseX[oneplayer.score],oneplayer.nextCheeseY[oneplayer.score],96)
     oneplayer.pennyNextCheese.show(oneplayer.nextCheeseX[oneplayer.pennyScore],oneplayer.nextCheeseY[oneplayer.pennyScore],0)
-// collision
-    if(oneplayer.roddy.y+90>=oneplayer.cheese.y&&oneplayer.roddy.x<=oneplayer.cheese.x+60&&oneplayer.roddy.y<=oneplayer.cheese.y+60&&oneplayer.roddy.x+90>=oneplayer.cheese.x){
-      oneplayer.cheese.x=oneplayer.nextCheese.x
-      oneplayer.cheese.y=oneplayer.nextCheese.y
-      oneplayer.score++
-    }
-    if(oneplayer.daisy.y+90>=oneplayer.cheese.y&&oneplayer.daisy.x<=oneplayer.cheese.x+60&&oneplayer.daisy.y<=oneplayer.cheese.y+60&&oneplayer.daisy.x+90>=oneplayer.cheese.x){
-      oneplayer.cheese.x=oneplayer.nextCheese.x
-      oneplayer.cheese.y=oneplayer.nextCheese.y
-      oneplayer.score++
-    }
 // characters
     if(character==1){
       bgcR=255
@@ -505,6 +716,13 @@ function draw() {
       bgcB=220
       oneplayer.daisy.show()
       oneplayer.daisy.move()
+      }
+    else if(character==3){
+      bgcR=200
+      bgcG=200
+      bgcB=150
+      oneplayer.ogRoddy.show()
+      oneplayer.ogRoddy.move()
     }
     oneplayer.penny.move()
 // ui
@@ -634,30 +852,31 @@ function draw() {
       twoplayer.nextCheeseY[twoplayer.highest]=random(110,540)
       twoplayer.newHighest=false
     }
+    // as the highest possible score continues the array of random numbers, the players personal score corresponds to the index of their next cheese location
+    twoplayer.p1nextCheese.show(twoplayer.nextCheeseX[twoplayer.p1score],twoplayer.nextCheeseY[twoplayer.p1score],96)
+    twoplayer.p2nextCheese.show(780+twoplayer.nextCheeseX[twoplayer.p2score],twoplayer.nextCheeseY[twoplayer.p2score],96)
+    twoplayer.pennyNextCheese.show(twoplayer.nextCheeseX[twoplayer.pennyScore],twoplayer.nextCheeseY[twoplayer.pennyScore],0)
     if(twoplayer.penny.y+60<twoplayer.pennyCheese.y&&frameCount>180&&gameover==false){
       setTimeout(function(){
       twoplayer.penny.down()
-    },150/difficulty)
+    },180/difficulty)
     }
     if(twoplayer.penny.x>twoplayer.pennyCheese.x+40&&frameCount>180&&gameover==false){
       setTimeout(function(){
       twoplayer.penny.left()
-      },150/difficulty)
+      },180/difficulty)
     }
     if(twoplayer.penny.y>twoplayer.pennyCheese.y+40&&frameCount>180&&gameover==false){
       setTimeout(function(){
       twoplayer.penny.up()
-      },150/difficulty)
+      },180/difficulty)
     }
     if(twoplayer.penny.x+60<twoplayer.pennyCheese.x&&frameCount>180&&gameover==false){
       setTimeout(function(){
       twoplayer.penny.right()
-      },150/difficulty)
+      },180/difficulty)
     }
-// as the highest possible score continues the array of random numbers, the players personal score corresponds to the index of their next cheese location
-    twoplayer.p1nextCheese.show(twoplayer.nextCheeseX[twoplayer.p1score],twoplayer.nextCheeseY[twoplayer.p1score],64)
-    twoplayer.p2nextCheese.show(780+twoplayer.nextCheeseX[twoplayer.p2score],twoplayer.nextCheeseY[twoplayer.p2score],64)
-    twoplayer.pennyNextCheese.show(twoplayer.nextCheeseX[twoplayer.pennyScore],twoplayer.nextCheeseY[twoplayer.pennyScore],0)
+
 // collision
     if(twoplayer.player1.y+60>=twoplayer.p1cheese.y&&twoplayer.player1.x<=twoplayer.p1cheese.x+40&&twoplayer.player1.y<=twoplayer.p1cheese.y+40&&twoplayer.player1.x+60>=twoplayer.p1cheese.x){
       twoplayer.p1score+=1
@@ -760,20 +979,34 @@ function draw() {
   
     }
   if(screen==7){
-    textSize(92)
-    text("COMING SOON...",20,430)
+    fill(255)
+    textSize(75)
+    text("COMING SOON...",150,400)
+    // if(character==1){
+    //     fill(255,200,220)
+    //   }
+    //   else if(character==2){
+    //     fill(200,255,220)
+    //   }
+    // else if(character==3){
+    //   fill(200,200,150)
+    // }
+    // rect(0,110,500,500)
+    // fill(255,220,200)
+    // rect(780,110,500,500)
   }
 // version #
   textFont(comicSans)
-  fill(50,100,255)
-  if(screen==7){
-      textSize(130)
-      text("beta 1.0",350,600)
-    }
-    else{
-      textSize(55)
-      text("alpha 1.4.1",1000,700)
-  }
+  strokeColor=color(0)
+  strokeColor.setAlpha(192)
+  stroke(strokeColor)
+  strokeWeight(10)
+  betaColor=color(255,100,220)
+  betaColor.setAlpha(192)
+  fill(betaColor)
+      textSize(45)
+      betaText=text("beta 1.0",25,700)
+  noStroke()
 // inputs
   if(frameCount>180){
     if (keyIsDown(87)&&frameCount>180){
@@ -815,26 +1048,42 @@ function draw() {
       if(keyIsDown(87)||keyIsDown(73)){
         oneplayer.roddy.up()
         oneplayer.daisy.up()
+        oneplayer.ogRoddy.up()
+        tutorial.roddy.ySpeed=-4
+        tutorial.roddy.direction=1
        }
        else if(keyIsDown(83)||keyIsDown(75)){
         oneplayer.roddy.down()
         oneplayer.daisy.down()
+        oneplayer.ogRoddy.down()
+         tutorial.roddy.ySpeed=4
+         tutorial.roddy.direction=3
        }
        else{
         oneplayer.roddy.ySpeed=0
         oneplayer.daisy.ySpeed=0
+        oneplayer.ogRoddy.ySpeed=0
+         tutorial.roddy.ySpeed=0
     }
     if(keyIsDown(65)||keyIsDown(74)){
         oneplayer.roddy.left()
         oneplayer.daisy.left()
+        oneplayer.ogRoddy.left()
+      tutorial.roddy.xSpeed=-4
+      tutorial.roddy.direction=4
       }
       else if(keyIsDown(68)||keyIsDown(76)){
         oneplayer.roddy.right()
         oneplayer.daisy.right()
+        oneplayer.ogRoddy.right()
+        tutorial.roddy.xSpeed=4
+        tutorial.roddy.direction=2
       }
       else{
         oneplayer.roddy.xSpeed=0
         oneplayer.daisy.xSpeed=0
+        oneplayer.ogRoddy.xSpeed=0
+        tutorial.roddy.xSpeed=0
     }
   }
   if(gameover==true){
@@ -842,6 +1091,8 @@ function draw() {
     oneplayer.roddy.ySpeed=0
     oneplayer.daisy.xSpeed=0
     oneplayer.daisy.ySpeed=0
+    oneplayer.ogRoddy.xSpeed=0
+    oneplayer.ogRoddy.ySpeed=0
     oneplayer.penny.xSpeed=0
     oneplayer.penny.ySpeed=0
     twoplayer.player1.xSpeed=0
